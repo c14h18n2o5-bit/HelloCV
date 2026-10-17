@@ -25,6 +25,9 @@ project(UnitConverter
     DESCRIPTION "单位转换器：摄氏度/华氏度、米/英尺、磅/千克"
     LANGUAGES CXX)
 
+#    配置阶段打印工程信息，确认当前构建的是哪个版本（message(STATUS) 会带 "-- " 前缀）。
+message(STATUS "UnitConverter v${PROJECT_VERSION}")
+
 # 2. 全局编译配置（set） ------------------------------------------------------
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)   # 编译器不支持 C++17 就直接报错，而不是悄悄降级
@@ -46,42 +49,22 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 # 让 install() 的路径符合平台惯例，而不是写死 bin/ lib/。
 include(GNUInstallDirs)
 
-# 3. 查找 Git 并读取提交号（find_package 的另一种用法） ------------------------
-#    find_package 除了查找 OpenCV 这类第三方库，也能查找系统里已有的工具；
-#    这里把当前提交号编译进程序，方便确认“运行的是哪一版代码”。
-#    找不到 Git 或不在 git 仓库里时，使用 unknown 兜底，不阻断构建。
-find_package(Git QUIET)
-set(UNITCONVERTER_GIT_HASH "unknown")
-if(Git_FOUND)
-    execute_process(
-        COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        OUTPUT_VARIABLE UNITCONVERTER_GIT_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET)
-endif()
-if(NOT UNITCONVERTER_GIT_HASH)
-    set(UNITCONVERTER_GIT_HASH "unknown")
-endif()
-message(STATUS "UnitConverter ${PROJECT_VERSION}（git: ${UNITCONVERTER_GIT_HASH}）")
-
-# 4. 添加转换库子目录（add_subdirectory） -------------------------------------
+# 3. 添加转换库子目录（add_subdirectory） -------------------------------------
 #    unitlib/CMakeLists.txt 负责把转换函数编译成静态库 unitlib，
 #    并对外声明头文件目录（PUBLIC），主程序链接后即可使用。
 add_subdirectory(unitlib)
 
-# 5. 构建可执行程序 -----------------------------------------------------------
+# 4. 构建可执行程序 -----------------------------------------------------------
 add_executable(unit_converter src/main.cpp)
 
 # 链接：写目标名 unitlib 即可，CMake 会自动带上它的头文件路径和编译要求。
 # PRIVATE 表示“只有 unit_converter 自己需要 unitlib，不需要传播给别的目标”。
 target_link_libraries(unit_converter PRIVATE unitlib)
 
-# 编译宏：把版本号和 git 提交号传给 main.cpp，用于启动时显示版本信息。
+# 编译宏：把工程版本号传给 main.cpp，用于启动时显示版本信息。
 # 宏的值必须是字符串字面量，所以这里写成 APP_VERSION="1.0.0"。
 target_compile_definitions(unit_converter PRIVATE
-    APP_VERSION="${PROJECT_VERSION}"
-    APP_GIT_HASH="${UNITCONVERTER_GIT_HASH}")
+    APP_VERSION="${PROJECT_VERSION}")
 
 # 编译警告与编码设置：
 #   MSVC：/W4 开启较高警告等级；/utf-8 让源码按 UTF-8 解析、执行字符集也是 UTF-8，
@@ -93,7 +76,7 @@ else()
     target_compile_options(unit_converter PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-# 6. 安装规则（install） ------------------------------------------------------
+# 5. 安装规则（install） ------------------------------------------------------
 #    使用：cmake --install build --prefix <安装路径>
 #    会把可执行文件装到 <prefix>/bin 下。
 install(TARGETS unit_converter

@@ -30,13 +30,10 @@
 #  include <windows.h>
 #endif
 
-// 这两个宏由 CMake 的 target_compile_definitions() 传入；
+// APP_VERSION 宏由 CMake 的 target_compile_definitions() 传入；
 // 若没有用 CMake 构建，则回退为友好提示，保证仍可编译。
 #ifndef APP_VERSION
 #  define APP_VERSION "dev"
-#endif
-#ifndef APP_GIT_HASH
-#  define APP_GIT_HASH "unknown"
 #endif
 
 namespace {
@@ -126,8 +123,7 @@ void printResult(double value, const char* fromUnit,
 void printBanner() {
     std::cout << "============================================================\n"
               << "              单位转换器 UnitConverter v" << APP_VERSION << "\n"
-              << "     程序版本：git " << APP_GIT_HASH
-              << "   |   转换库版本：" << unitlib::version() << "\n"
+              << "              转换库版本：" << unitlib::version() << "\n"
               << "============================================================\n"
               << "支持三组单位互转：\n"
               << "  1) 温度：摄氏度 (℃)  <->  华氏度 (℉)\n"
