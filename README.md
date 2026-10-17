@@ -2,6 +2,8 @@
 
 哈尔滨工业大学（威海）创新平台培训 · **第二次任务（CMake）** 的代码与文档仓库。
 
+**仓库地址**：<https://github.com/c14h18n2o5-bit/HelloCV>（公开）
+
 ## 仓库简介
 
 `HelloCV` 用于存放创新平台培训各次任务的代码与文档。本次（第二次任务）的主题是 **CMake 构建系统**：
@@ -11,8 +13,9 @@
 
 - `UnitConverter/`：本次 CMake 任务项目（单位转换器主程序 + 转换库 `unitlib`）；
 - `README.md`：项目结构、环境配置、构建运行、测试记录与笔记链接；
-- `docs/`：两篇语雀笔记的 Markdown 源稿（发布到语雀后以链接形式提交）；
-- `docs/语雀笔记链接汇总.md`：所有语雀笔记（含第一次任务 Linux / Git 笔记）的链接汇总与可访问性自检说明；
+- `docs/`：两篇 CMake 语雀笔记的 Markdown 源稿（发布到语雀后以链接形式提交）；
+- `docs/语雀笔记链接汇总.md`：所有语雀笔记链接的整理版汇总与公开可访问性自检说明；
+- `yuqueLinks`：语雀笔记链接的原始记录（CMake 两篇与 LLM 实践任务已发布，Linux / Git 笔记整理中）；
 - `.gitignore`：忽略构建目录、编译产物与 IDE 文件，保证 `build/` 不进入版本库。
 
 ## 功能特性
@@ -33,6 +36,7 @@
 HelloCV/
 ├── README.md                        # 仓库说明（本文件）
 ├── .gitignore                       # 忽略 build/、编译产物、IDE 文件
+├── yuqueLinks                       # 语雀笔记链接原始记录
 ├── docs/
 │   ├── 语雀笔记-CMake学习内容.md     # 语雀笔记源稿（学习内容）
 │   ├── 语雀笔记-UnitConverter实践.md # 语雀笔记源稿（实践任务）
@@ -205,14 +209,15 @@ cmake --install build --prefix <安装路径> --config Release
 
 | 序号 | 笔记主题 | 对应任务 | 语雀链接 |
 | --- | --- | --- | --- |
-| 1 | Linux 基础学习笔记 | 第一次任务（Linux） | 替换为已发布链接（待填写） |
-| 2 | Git 学习笔记 | 第一次任务（Git） | 替换为已发布链接（待填写） |
-| 3 | CMake 学习内容 | 第二次任务（CMake） | （待填写：发布语雀后粘贴链接） |
-| 4 | UnitConverter 实践任务 | 第二次任务（CMake） | （待填写：发布语雀后粘贴链接） |
+| 1 | Linux 基础学习笔记 | 第一次任务（Linux） | 待补充（笔记仍在整理中） |
+| 2 | Git 学习笔记 | 第一次任务（Git） | 待补充（笔记仍在整理中） |
+| 3 | CMake 学习内容 | 第二次任务（CMake） | [CMake 学习内容](https://www.yuque.com/c14h18n2o5-qc6ra/lfy3sc/ggwixqtymgq1e4f7) |
+| 4 | UnitConverter 实践任务 | 第二次任务（CMake） | [UnitConverter 实践任务](https://www.yuque.com/c14h18n2o5-qc6ra/lfy3sc/zc17timef0dopx4n) |
+| 5 | LLM 实践任务 | 第二次任务（LLM） | [LLM 实践任务记录](https://www.yuque.com/c14h18n2o5-qc6ra/lfy3sc/dgro3xnqio6upb6y) |
 
-**提交前必须把上表的占位内容全部替换为真实、公开可访问的语雀链接；链接需在未登录状态下也能打开。**
+第二次任务的两篇 CMake 笔记与 LLM 实践任务笔记均已发布（已确认链接可直接打开）；第一次任务的两篇笔记仍在整理，发布后把链接补到上表对应位置即可。
 同一份链接汇总也见 `docs/语雀笔记链接汇总.md`（含链接公开可访问的自检方法），两处需同步更新。
-两篇笔记的 Markdown 源稿位于 `docs/` 目录，发布到语雀后请同步更新本表。
+两篇 CMake 笔记的 Markdown 源稿位于 `docs/` 目录，发布到语雀后请同步更新本表。
 
 ## 常见问题 FAQ
 
@@ -259,7 +264,7 @@ Visual Studio 自带的 CMake 默认没有加入 PATH。按上文「环境准备
 ## 提交前检查清单
 
 - [ ] `UnitConverter/build/`、`build-ninja/` 等构建目录与所有编译产物均未提交（已由 `.gitignore` 忽略）；
-- [ ] `README.md` 与 `docs/语雀笔记链接汇总.md` 中的四个语雀笔记链接均已替换为真实链接，且在未登录状态下可公开访问；
+- [ ] `README.md` 与 `docs/语雀笔记链接汇总.md` 中的语雀链接均为真实链接且可公开访问（CMake 两篇与 LLM 已填写；第一次任务 Linux / Git 两篇发布后补上）；
 - [ ] `README.md` 的描述与当前代码、目录结构一致（如命令、路径、版本号）；
 - [ ] 两篇语雀笔记已发布，包含代码块、截图（替换掉占位说明）与问题分析；
 - [ ] 仓库已设为公开（Public），并在干净环境中重新 clone 后按 README 命令成功配置、构建、运行；

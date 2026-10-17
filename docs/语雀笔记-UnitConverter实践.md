@@ -1,7 +1,7 @@
 # UnitConverter 实践任务笔记
 
 > 培训项目：哈工大（威海）创新平台培训 · 第二次任务（CMake）
-> 仓库：HelloCV（仓库链接：待填写）
+> 仓库：HelloCV（仓库链接：https://github.com/c14h18n2o5-bit/HelloCV）
 > 运行环境：Windows 11 家庭版 中文版 + Visual Studio 2026 Community（MSVC 19.51.36257）+ CMake 4.3.1-msvc1 + C++17
 
 ## 一、任务要求回顾
@@ -29,9 +29,11 @@ UnitConverter/
 HelloCV/
 ├── README.md
 ├── .gitignore
+├── yuqueLinks                  # 语雀笔记链接原始记录
 ├── docs/
 │   ├── 语雀笔记-CMake学习内容.md
-│   └── 语雀笔记-UnitConverter实践.md
+│   ├── 语雀笔记-UnitConverter实践.md
+│   └── 语雀笔记链接汇总.md      # 所有语雀笔记链接汇总
 └── UnitConverter/
     ├── CMakeLists.txt         # 根构建脚本
     ├── src/main.cpp

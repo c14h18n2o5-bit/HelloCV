@@ -1,7 +1,7 @@
 # CMake 学习内容笔记
 
 > 培训项目：哈工大（威海）创新平台培训 · 第二次任务（CMake）
-> 对应实践仓库：HelloCV 中的 UnitConverter 项目（仓库链接：待填写）
+> 对应实践仓库：HelloCV 中的 UnitConverter 项目（仓库链接：https://github.com/c14h18n2o5-bit/HelloCV）
 > 说明：本文结合 CMake 官方文档、公开教程与本次动手实践整理；除 find_package 的 OpenCV 前瞻示例外，其余代码示例均来自本仓库真实文件。
 
 ## 一、CMake 到底解决什么问题
