@@ -156,6 +156,8 @@ cmake --install build --prefix <安装路径> --config Release
   结果：100 ℃ = 212 ℉
 ```
 
+> 说明：上面是本机首次构建（仓库还没有 Git 提交）时的输出，所以横幅显示 `git unknown`；提交后重新配置构建会显示实际的短提交号（形如 `git cc92d72`，具体值随提交变化）。
+
 实测的 8 组正常换算结果：
 
 - `100 ℃ = 212 ℉`；`32 ℉ = 0 ℃`；`-273.15 ℃ = -459.67 ℉`；`-459.67 ℉ = -273.15 ℃`；
@@ -224,7 +226,8 @@ Ninja、MinGW Makefiles、Unix Makefiles 是单配置生成器，产物直接在
 
 **Q7：启动横幅里显示 `git unknown`，是不是构建失败？**
 不是。`find_package(Git)` 找不到 Git、或当前源码目录没有 Git 提交时，提交号会回退为 `unknown`，
-仅影响版本展示，不阻断构建。本机配置日志实际显示 `UnitConverter 1.0.0（git: unknown）`。
+仅影响版本展示，不阻断构建。本机配置日志实际显示 `UnitConverter 1.0.0（git: unknown）`；
+建立首次提交后重新配置构建，该位置就会变成实际短提交号。
 
 **Q8：`build/` 目录需要提交吗？Visual Studio 的 `.vs/` 呢？**
 都不需要也不能提交。`build/` 是本地生成的编译目录，体积大且与机器环境相关；`.gitignore` 已忽略 `build/`、`build-*/`、`build_*/` 这类构建目录，以及 `.vs/` 缓存目录、`*.vcxproj`、`*.sln` 等 IDE 生成文件。

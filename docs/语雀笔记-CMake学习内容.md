@@ -177,9 +177,9 @@ install(TARGETS unit_converter RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 message(STATUS "UnitConverter ${PROJECT_VERSION}（git: ${UNITCONVERTER_GIT_HASH}）")
 ```
 
-**作用**：在配置阶段打印信息，`STATUS` 级别的输出带 `-- ` 前缀。本项目用它确认版本与 Git 提交号，配置日志中显示 `UnitConverter 1.0.0（git: unknown）`。
+**作用**：在配置阶段打印信息，`STATUS` 级别的输出带 `-- ` 前缀。本项目用它确认版本与 Git 提交号；没有 Git 提交时显示 `UnitConverter 1.0.0（git: unknown）`，有提交后显示实际短提交号。
 
-> 📷 截图占位 3：配置日志中包含 `UnitConverter 1.0.0（git: unknown）` 与 `Build files have been written to` 的片段。
+> 📷 截图占位 3：配置日志中包含 `UnitConverter 1.0.0（git: ...）` 与 `Build files have been written to` 的片段（Git 号位置显示 `unknown` 或实际短哈希都可以）。
 
 ## 六、现代 CMake：target-based 与 PUBLIC / PRIVATE / INTERFACE
 

@@ -268,6 +268,8 @@ main.cpp -> ...\build\bin\Release\unit_converter.exe
 
 构建过程无警告。产物：`build\bin\Release\unit_converter.exe` 与 `build\lib\Release\unitlib.lib`。
 
+> 说明：上面的配置日志是首次构建（仓库还没有 Git 提交）时的输出，因此版本行显示 `git: unknown`；建立首次提交后重新配置，该行会变成实际短提交号（本机当时显示 `UnitConverter 1.0.0（git: cc92d72）`，提交号会随新的提交变化）。截图时显示两种之一都正常，能说明版本号来自 CMake 即可。
+
 > 📷 截图占位 2：终端中首次执行 `cmake -S . -B build` 的日志，必须包含 `The CXX compiler identification is MSVC 19.51.36257.0` 和 `Build files have been written to` 两行。
 
 > 📷 截图占位 3：`cmake --build build --config Release` 成功后的日志，需包含 `unit_converter.exe` 输出路径那一行。
@@ -313,6 +315,8 @@ cmake --install build --prefix <安装路径> --config Release
 ```
 
 实测换算结果：`100 ℃ = 212 ℉`、`32 ℉ = 0 ℃`、`-273.15 ℃ = -459.67 ℉`、`-459.67 ℉ = -273.15 ℃`、`1 m = 3.2808399 ft`、`1 ft = 0.3048 m`、`1 lb = 0.45359237 kg`、`1 kg = 2.2046226 lb`。
+
+> 说明：上面是提交前构建的运行结果，横幅显示 `git unknown`；提交后重新构建运行，版本行会显示实际短提交号。
 
 > 📷 截图占位 6：程序运行界面（启动横幅 + 主菜单 + 「结果：100 ℃ = 212 ℉」）。
 
@@ -369,9 +373,9 @@ cmake --install build --prefix <安装路径> --config Release
 解决与验证：当前实现先 `std::cin.clear()` 清除错误标志，再用 `discardLine()`（`ignore(max, '\n')`）丢弃整行残留字符；实测输入 `abc` 后能继续正常输入。
 
 **问题 7：`find_package(Git)` 读不到提交号**
-现象：配置日志显示 `git: unknown`。
+现象：首次配置时仓库还没有提交，配置日志显示 `git: unknown`。
 分析：源码目录没有提交（或未安装 Git）时 `git rev-parse` 失败，变量可能为空。
-解决：变量先初始化为 `unknown`，失败后仍保持，并再用 `if(NOT ...)` 兜底；版本号不阻断构建。
+解决：变量先初始化为 `unknown`，失败后仍保持，并再用 `if(NOT ...)` 兜底；版本号不阻断构建。建立首次提交后重新配置，日志就会显示实际短提交号（本机当时显示 `git: cc92d72`，提交号会随新的提交变化）。
 
 **问题 8：构建产物与 IDE 缓存不应提交**
 分析：如果缺少 `.gitignore` 规则，`build/`、`.vs/`、`*.exe`、`*.lib` 等本地生成物会污染仓库、增大体积。
