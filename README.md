@@ -25,7 +25,7 @@
   程序不崩溃、不死循环；
 - **CMake 现代写法**：以 target 为中心，用 `target_link_libraries` / `target_include_directories` /
   `target_compile_definitions` / `target_compile_features` 传递使用要求，而不是全局变量；
-- **版本信息与安装**：CMake 把工程版本号与 Git 提交号以宏传入程序；支持 `cmake --install`，可执行文件、静态库、头文件按 GNU 目录惯例安装到指定前缀。
+- **版本信息与安装**：工程版本号由 `project(UnitConverter VERSION 1.0.0)` 定义，CMake 通过 `target_compile_definitions` 以 `APP_VERSION` 宏传给程序，启动横幅显示 `v1.0.0`；支持 `cmake --install`，可执行文件、静态库、头文件按 GNU 目录惯例安装到指定前缀。
 
 ## 目录结构
 
@@ -59,7 +59,7 @@ HelloCV/
 
 | 路径 | 职责 |
 | --- | --- |
-| `UnitConverter/CMakeLists.txt` | 声明工程与最低 CMake 版本；设置 C++17、默认构建类型、统一输出目录；查找 Git 读取提交号；`add_subdirectory(unitlib)` 引入库；生成 `unit_converter` 可执行文件并链接库、注入宏；配置安装规则。 |
+| `UnitConverter/CMakeLists.txt` | 声明工程与最低 CMake 版本；设置 C++17、默认构建类型、统一输出目录；`add_subdirectory(unitlib)` 引入库；生成 `unit_converter` 可执行文件并链接库、注入版本宏；配置安装规则。 |
 | `UnitConverter/unitlib/CMakeLists.txt` | 把 `unitlib.cpp` 编成静态库；对外声明头文件目录（构建时 / 安装后两种路径）与 C++17 要求；安装库文件与头文件。 |
 | `UnitConverter/src/main.cpp` | 程序入口与交互逻辑：切换控制台 UTF-8 编码、打印横幅与菜单、读取并校验输入、调用库函数、捕获并展示异常。不含换算公式。 |
 | `UnitConverter/unitlib/include/unitlib.h` | 库的公开接口：6 个转换函数、绝对零度常量、`version()`；只声明不实现，调用方无需关心公式。 |
@@ -74,7 +74,7 @@ HelloCV/
 | 编译器 / 构建工具 | MSVC 19.51.36257（Visual Studio 2026 Community，MSBuild 18.10.1，Windows SDK 10.0.26100.0，自带 Ninja）；通用要求 GCC ≥ 7 / MSVC ≥ 2019 / Clang ≥ 7 |
 | CMake | 4.3.1-msvc1（随 Visual Studio 安装）；最低要求 3.16 |
 | C++ 标准 | C++17（`CMAKE_CXX_STANDARD 17`，`CMAKE_CXX_STANDARD_REQUIRED ON`） |
-| 其他 | 无需第三方库；`find_package(Git)` 为可选，找不到 Git 时程序版本号显示 `unknown`，不影响构建 |
+| 其他 | 无需第三方库；CMake ≥ 3.16 + C++17 编译器即可 |
 
 ## 构建与运行
 
@@ -144,7 +144,7 @@ cmake --install build --prefix <安装路径> --config Release
 ```text
 ============================================================
               单位转换器 UnitConverter v1.0.0
-     程序版本：git unknown   |   转换库版本：1.0.0
+              转换库版本：1.0.0
 ============================================================
 支持三组单位互转：
   1) 温度：摄氏度 (℃)  <->  华氏度 (℉)
@@ -155,8 +155,6 @@ cmake --install build --prefix <安装路径> --config Release
 请选择转换方向 [0-2]: 请输入摄氏度 (℃): 
   结果：100 ℃ = 212 ℉
 ```
-
-> 说明：上面是本机首次构建（仓库还没有 Git 提交）时的输出，所以横幅显示 `git unknown`；提交后重新配置构建会显示实际的短提交号（形如 `git cc92d72`，具体值随提交变化）。
 
 实测的 8 组正常换算结果：
 
@@ -224,10 +222,10 @@ Ninja、MinGW Makefiles、Unix Makefiles 是单配置生成器，产物直接在
 非法输入会让 `std::cin` 置 failbit。必须在提示前 `std::cin.clear()` 清除错误状态，再用
 `std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n')` 丢弃整行残留字符，否则后续读取会连续失败。
 
-**Q7：启动横幅里显示 `git unknown`，是不是构建失败？**
-不是。`find_package(Git)` 找不到 Git、或当前源码目录没有 Git 提交时，提交号会回退为 `unknown`，
-仅影响版本展示，不阻断构建。本机配置日志实际显示 `UnitConverter 1.0.0（git: unknown）`；
-建立首次提交后重新配置构建，该位置就会变成实际短提交号。
+**Q7：启动横幅里的 `v1.0.0` 是写死的吗？**
+不是。它来自 `project(UnitConverter VERSION 1.0.0)` 中的 `VERSION`（即 `${PROJECT_VERSION}`），由
+`target_compile_definitions` 以 `APP_VERSION` 宏传给 `main.cpp`。改版本号只需修改 `project()` 的 `VERSION`，
+然后重新配置、构建即可。
 
 **Q8：`build/` 目录需要提交吗？Visual Studio 的 `.vs/` 呢？**
 都不需要也不能提交。`build/` 是本地生成的编译目录，体积大且与机器环境相关；`.gitignore` 已忽略 `build/`、`build-*/`、`build_*/` 这类构建目录，以及 `.vs/` 缓存目录、`*.vcxproj`、`*.sln` 等 IDE 生成文件。

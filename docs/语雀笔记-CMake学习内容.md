@@ -2,7 +2,7 @@
 
 > 培训项目：哈工大（威海）创新平台培训 · 第二次任务（CMake）
 > 对应实践仓库：HelloCV 中的 UnitConverter 项目（仓库链接：待填写）
-> 说明：本文结合 CMake 官方文档、公开教程与本次动手实践整理，代码示例均来自本仓库真实文件。
+> 说明：本文结合 CMake 官方文档、公开教程与本次动手实践整理；除 find_package 的 OpenCV 前瞻示例外，其余代码示例均来自本仓库真实文件。
 
 ## 一、CMake 到底解决什么问题
 
@@ -53,7 +53,7 @@ cmake -S . -B build
 cmake --build build --config Release
 ```
 
-两种写法本质相同：都在源码目录之外生成构建文件并完成构建，区别只在生成器与底层构建工具。`cmake --build` 是跨平台统一入口，对 Makefile、Ninja、MSBuild 都适用，所以本项目统一使用 `-S/-B` + `cmake --build` 的写法。`CMakeCache.txt` 会缓存编译器路径与选项；修改 `CMakeLists.txt` 后再次构建时会自动重新配置，不需要手动删缓存。
+两种写法本质相同，区别只在生成器与底层构建工具；`cmake --build` 是跨平台统一入口，对 Makefile、Ninja、MSBuild 都适用。`CMakeCache.txt` 会缓存编译器路径与选项，修改 `CMakeLists.txt` 后再次构建会自动重新配置，不需要手动删缓存。
 
 ## 四、源码外构建的意义
 
@@ -145,7 +145,7 @@ target_include_directories(unitlib PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 ```
 
-**作用**：声明头文件搜索路径。`PUBLIC` 让链接 `unitlib` 的目标自动继承。生成器表达式区分「构建时」（源码 `include/`）与「安装后」（`<prefix>/include`）两种路径，是库能被安装后复用的关键。**理解**：路径不能写死，因为同一份 `CMakeLists.txt` 要服务两种场景。
+**作用**：声明头文件搜索路径。`PUBLIC` 让链接 `unitlib` 的目标自动继承。生成器表达式区分「构建时」（源码 `include/`）与「安装后」（`<prefix>/include`）两种路径，是库能被安装后复用的关键。
 
 ### 10. target_compile_definitions
 
@@ -153,15 +153,17 @@ target_include_directories(unitlib PUBLIC
 target_compile_definitions(unit_converter PRIVATE APP_VERSION="${PROJECT_VERSION}")
 ```
 
-**作用**：给目标传编译宏。本项目把工程版本号、Git 提交号传给主程序，把库版本号传给 `unitlib`。宏的值必须是字符串字面量，所以写成 `APP_VERSION="1.0.0"`。**理解**：编译期注入版本信息，比运行时读配置文件更简单，也不会增加部署负担。
+**作用**：给目标传编译宏。本项目把工程版本号传给主程序（`APP_VERSION`），把库版本号传给 `unitlib`（`UNITLIB_VERSION_STRING`）。宏的值必须是字符串字面量，所以写成 `APP_VERSION="1.0.0"`。**理解**：编译期注入版本信息，比运行时读配置文件更简单，也不会增加部署负担。
 
 ### 11. find_package
 
 ```cmake
-find_package(Git QUIET)
+find_package(OpenCV REQUIRED)
+target_include_directories(unit_converter PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(unit_converter PRIVATE ${OpenCV_LIBS})
 ```
 
-**作用**：查找依赖包或系统工具，找到后提供 `Git_FOUND`、`GIT_EXECUTABLE` 等变量；`QUIET` 表示找不到时不打印警告。本项目用它找到 Git 后配合 `execute_process` 读取提交号，找不到时用 `unknown` 兜底，不阻断构建。
+**作用**：查找第三方库（也能查找系统工具）。`REQUIRED` 表示找不到就报错停止配置，`QUIET` 表示静默跳过，找到后可用 `<包名>_FOUND` 判断结果。**本项目情况**：任务书要求掌握 find_package，但 UnitConverter 没有第三方依赖，当前 `CMakeLists.txt` 并未调用它，日志中也没有相关输出。**理解与前瞻**：后续接入图像处理需写 `find_package(OpenCV REQUIRED)`；老式写法用包导出的变量（`${OpenCV_INCLUDE_DIRS}`、`${OpenCV_LIBS}`）拼头文件路径和链接库，现代库还会导出「目标」，链接目标即可自动继承依赖，应优先查包文档用目标写法；上面的代码是前瞻示例，不是本项目现状。
 
 ### 12. install
 
@@ -174,12 +176,12 @@ install(TARGETS unit_converter RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 ### 13. message(STATUS)
 
 ```cmake
-message(STATUS "UnitConverter ${PROJECT_VERSION}（git: ${UNITCONVERTER_GIT_HASH}）")
+message(STATUS "UnitConverter v${PROJECT_VERSION}")
 ```
 
-**作用**：在配置阶段打印信息，`STATUS` 级别的输出带 `-- ` 前缀。本项目用它确认版本与 Git 提交号；没有 Git 提交时显示 `UnitConverter 1.0.0（git: unknown）`，有提交后显示实际短提交号。
+**作用**：在配置阶段打印信息，`STATUS` 级别的输出带 `-- ` 前缀。本项目在 `project()` 之后立即打印工程版本，配置日志显示 `-- UnitConverter v1.0.0`，能一眼确认当前配置的是哪个版本。
 
-> 📷 截图占位 3：配置日志中包含 `UnitConverter 1.0.0（git: ...）` 与 `Build files have been written to` 的片段（Git 号位置显示 `unknown` 或实际短哈希都可以）。
+> 📷 截图占位 3：配置日志中包含 `UnitConverter v1.0.0` 与 `Build files have been written to` 的片段。
 
 ## 六、现代 CMake：target-based 与 PUBLIC / PRIVATE / INTERFACE
 
@@ -191,7 +193,7 @@ message(STATUS "UnitConverter ${PROJECT_VERSION}（git: ${UNITCONVERTER_GIT_HASH
 | `INTERFACE` | 不需要 | 传播 |
 | `PUBLIC` | 需要 | 传播 |
 
-本项目：`unitlib` 的头文件路径、`cxx_std_17` 用 `PUBLIC`（使用者同样需要）；库版本宏用 `PRIVATE`（只在库内部实现里用）；主程序链接 `unitlib` 用 `PRIVATE`（没有其他目标再链接主程序）。个人理解：选传播级别就是在回答「这个设置属于我，还是也属于我的使用者」。用对之后，别人链接你的库不需要再手动补一堆 include 路径和宏，比全局变量可维护得多。
+本项目：`unitlib` 的头文件路径、`cxx_std_17` 用 `PUBLIC`（使用者同样需要）；库版本宏用 `PRIVATE`（只在库内部实现里用）；主程序链接 `unitlib` 用 `PRIVATE`（没有其他目标再链接主程序）。个人理解：选传播级别就是在回答「这个设置属于我，还是也属于我的使用者」；用对之后，链接你的库不需要再补 include 路径和宏。
 
 ## 七、生成器表达式
 
@@ -231,4 +233,4 @@ cmake --install build --prefix <prefix> --config Release   # 安装
 
 ## 十一、小结
 
-CMake 的学习重点不在背命令，而在建立三组关系：源码与构建目录的关系（源码外构建）、生成器与构建工具的关系（谁生成谁执行）、target 与使用者的关系（`PRIVATE` / `PUBLIC` / `INTERFACE` 的传播）。把这三组关系想清楚，再看具体命令就只是语法问题。下一步准备在 UnitConverter 上接入 CTest 补单元测试，并尝试 `find_package(OpenCV)`，为后续图像处理任务打基础。
+CMake 的学习重点不在背命令，而在建立三组关系：源码与构建目录的关系（源码外构建）、生成器与构建工具的关系（谁生成谁执行）、target 与使用者的关系（`PRIVATE` / `PUBLIC` / `INTERFACE` 的传播）。下一步准备在 UnitConverter 上接入 CTest 补单元测试，并尝试 `find_package(OpenCV)`，为后续图像处理任务打基础。

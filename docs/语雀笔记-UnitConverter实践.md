@@ -142,25 +142,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 要求 C++17 且「必须支持」，不支持直接报错，而不是悄悄降级；关闭 GNU 扩展让代码保持标准 C++。另外给单配置生成器补了默认的 `CMAKE_BUILD_TYPE=Release`，并用 `CMAKE_RUNTIME_OUTPUT_DIRECTORY` 等变量把产物统一到 `build/bin` 与 `build/lib`。
 
-**(3) 安装目录与 Git 版本号**
+**(3) 安装目录与版本信息**
 
 ```cmake
 include(GNUInstallDirs)
 
-find_package(Git QUIET)
-set(UNITCONVERTER_GIT_HASH "unknown")
-if(Git_FOUND)
-    execute_process(
-        COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        OUTPUT_VARIABLE UNITCONVERTER_GIT_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET)
-endif()
-message(STATUS "UnitConverter ${PROJECT_VERSION}（git: ${UNITCONVERTER_GIT_HASH}）")
+message(STATUS "UnitConverter v${PROJECT_VERSION}")
 ```
 
-`include(GNUInstallDirs)` 提供标准安装目录变量，避免写死 `bin/`、`lib/`；`find_package(Git)` 演示了查找系统工具（而非第三方库）的用法，读不到提交号就保持 `unknown`，不阻断构建。`message(STATUS)` 把版本打到配置日志，便于确认。
+`include(GNUInstallDirs)` 提供标准安装目录变量，避免写死 `bin/`、`lib/`；`message(STATUS)` 在配置阶段打印工程版本（源码中写在 `project()` 之后），配置日志显示 `-- UnitConverter v1.0.0`，便于确认当前配置的是哪个版本。
 
 **(4) 子目录、可执行程序与链接**
 
@@ -177,8 +167,7 @@ target_link_libraries(unit_converter PRIVATE unitlib)
 
 ```cmake
 target_compile_definitions(unit_converter PRIVATE
-    APP_VERSION="${PROJECT_VERSION}"
-    APP_GIT_HASH="${UNITCONVERTER_GIT_HASH}")
+    APP_VERSION="${PROJECT_VERSION}")
 
 if(MSVC)
     target_compile_options(unit_converter PRIVATE /W4 /utf-8)
@@ -190,7 +179,7 @@ install(TARGETS unit_converter
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 ```
 
-编译宏把版本号、提交号传给 `main.cpp` 的启动横幅；MSVC 用 `/W4 /utf-8`（高警告 + UTF-8 源码与执行字符集，解决中文乱码），其他编译器用常规警告；`install()` 用 `GNUInstallDirs` 变量安装可执行文件。
+编译宏把工程版本号传给 `main.cpp` 的启动横幅（`APP_VERSION`）；MSVC 用 `/W4 /utf-8`（高警告 + UTF-8 源码与执行字符集，解决中文乱码），其他编译器用常规警告；`install()` 用 `GNUInstallDirs` 变量安装可执行文件。
 
 ### 4.2 unitlib/CMakeLists.txt
 
@@ -239,7 +228,7 @@ install(FILES include/unitlib.h
 
 静态库归 `ARCHIVE`（Windows 下 `.lib`，Linux 下 `.a`），头文件用 `install(FILES ...)` 装到 `<prefix>/include`。安装规则写在子目录里，体现「谁产生产物、谁描述安装」；子目录无需再写 `cmake_minimum_required` 和 `project`。
 
-> 📷 截图占位 1：`unitlib/CMakeLists.txt` 中 `target_include_directories` 生成器表达式那几行，以及根脚本中 `find_package(Git)` 那一段（用于笔记中标注讲解位置）。
+> 📷 截图占位 1：`unitlib/CMakeLists.txt` 中 `target_include_directories` 生成器表达式那几行（用于笔记中标注讲解位置）。
 
 ## 五、构建与运行实录
 
@@ -255,7 +244,8 @@ cmake --build build --config Release
 
 ```text
 -- The CXX compiler identification is MSVC 19.51.36257.0
--- UnitConverter 1.0.0（git: unknown）
+-- UnitConverter v1.0.0
+-- Configuring done
 -- Build files have been written to: .../UnitConverter/build
 ```
 
@@ -268,9 +258,7 @@ main.cpp -> ...\build\bin\Release\unit_converter.exe
 
 构建过程无警告。产物：`build\bin\Release\unit_converter.exe` 与 `build\lib\Release\unitlib.lib`。
 
-> 说明：上面的配置日志是首次构建（仓库还没有 Git 提交）时的输出，因此版本行显示 `git: unknown`；建立首次提交后重新配置，该行会变成实际短提交号（本机当时显示 `UnitConverter 1.0.0（git: cc92d72）`，提交号会随新的提交变化）。截图时显示两种之一都正常，能说明版本号来自 CMake 即可。
-
-> 📷 截图占位 2：终端中首次执行 `cmake -S . -B build` 的日志，必须包含 `The CXX compiler identification is MSVC 19.51.36257.0` 和 `Build files have been written to` 两行。
+> 📷 截图占位 2：终端中首次执行 `cmake -S . -B build` 的日志，必须包含 `The CXX compiler identification is MSVC 19.51.36257.0`、`UnitConverter v1.0.0` 和 `Build files have been written to` 三行。
 
 > 📷 截图占位 3：`cmake --build build --config Release` 成功后的日志，需包含 `unit_converter.exe` 输出路径那一行。
 
@@ -302,7 +290,7 @@ cmake --install build --prefix <安装路径> --config Release
 ```text
 ============================================================
               单位转换器 UnitConverter v1.0.0
-     程序版本：git unknown   |   转换库版本：1.0.0
+              转换库版本：1.0.0
 ============================================================
 ...
 请输入选项 [0-3]: 
@@ -315,8 +303,6 @@ cmake --install build --prefix <安装路径> --config Release
 ```
 
 实测换算结果：`100 ℃ = 212 ℉`、`32 ℉ = 0 ℃`、`-273.15 ℃ = -459.67 ℉`、`-459.67 ℉ = -273.15 ℃`、`1 m = 3.2808399 ft`、`1 ft = 0.3048 m`、`1 lb = 0.45359237 kg`、`1 kg = 2.2046226 lb`。
-
-> 说明：上面是提交前构建的运行结果，横幅显示 `git unknown`；提交后重新构建运行，版本行会显示实际短提交号。
 
 > 📷 截图占位 6：程序运行界面（启动横幅 + 主菜单 + 「结果：100 ℃ = 212 ℉」）。
 
@@ -372,12 +358,7 @@ cmake --install build --prefix <安装路径> --config Release
 分析：`abc` 这类输入会置 `std::cin` 的 failbit，若不 `clear()` 并丢弃整行，后续读取会连续失败。
 解决与验证：当前实现先 `std::cin.clear()` 清除错误标志，再用 `discardLine()`（`ignore(max, '\n')`）丢弃整行残留字符；实测输入 `abc` 后能继续正常输入。
 
-**问题 7：`find_package(Git)` 读不到提交号**
-现象：首次配置时仓库还没有提交，配置日志显示 `git: unknown`。
-分析：源码目录没有提交（或未安装 Git）时 `git rev-parse` 失败，变量可能为空。
-解决：变量先初始化为 `unknown`，失败后仍保持，并再用 `if(NOT ...)` 兜底；版本号不阻断构建。建立首次提交后重新配置，日志就会显示实际短提交号（本机当时显示 `git: cc92d72`，提交号会随新的提交变化）。
-
-**问题 8：构建产物与 IDE 缓存不应提交**
+**问题 7：构建产物与 IDE 缓存不应提交**
 分析：如果缺少 `.gitignore` 规则，`build/`、`.vs/`、`*.exe`、`*.lib` 等本地生成物会污染仓库、增大体积。
 解决与验证：`.gitignore` 已补齐 `build/`、`build-*/`、`build_*/`、`CMakeFiles/`、`*.exe`、`*.lib`、`*.sln`、`*.vcxproj`、`.vs/` 等规则；实测 `git status` 与 `git add -A --dry-run` 确认 `build/` 被忽略，暂存区只会加入源码与文档。
 
@@ -392,14 +373,15 @@ cmake --install build --prefix <安装路径> --config Release
 | `add_executable` | 根 `CMakeLists.txt` | 生成主程序 `unit_converter` |
 | `target_link_libraries` | 根 `CMakeLists.txt` | 主程序链接 `unitlib`（PRIVATE） |
 | `target_include_directories` | `unitlib/CMakeLists.txt` | PUBLIC 头文件路径，生成器表达式区分构建/安装场景 |
-| `target_compile_definitions` | 根（版本号、Git 号）+ `unitlib`（库版本号） | 向目标传编译宏 |
-| `find_package(Git)` | 根 `CMakeLists.txt` | 查找 Git 工具以读取提交号 |
+| `target_compile_definitions` | 根（工程版本号）+ `unitlib`（库版本号） | 向目标传编译宏 |
 | `add_subdirectory` | 根 `CMakeLists.txt` | 引入 `unitlib/` 子目录构建 |
 | `install` | 根（可执行文件）+ `unitlib`（库与头文件） | 定义安装规则 |
 | `include(GNUInstallDirs)` | 根 `CMakeLists.txt` | 提供标准安装目录变量 |
-| `message(STATUS)` | 根 `CMakeLists.txt` | 配置阶段输出工程版本与 Git 提交号 |
+| `message(STATUS)` | 根 `CMakeLists.txt` | 配置阶段输出工程版本号 |
 
-另外还用到 `target_compile_features`（PUBLIC `cxx_std_17`）、`target_compile_options`、`execute_process`（执行 `git rev-parse`）与生成器表达式，属于要求之外的补充实践。
+另外还用到 `target_compile_features`（PUBLIC `cxx_std_17`）、`target_compile_options` 与生成器表达式，属于要求之外的补充实践。
+
+> 说明：任务书学习内容中要求掌握的 `find_package` 是查找第三方库的通用命令；UnitConverter 没有第三方依赖，当前 `CMakeLists.txt` 并未调用它，其原理与后续接入 OpenCV 的写法见学习笔记对应小节。
 
 ## 九、个人理解与收获
 
