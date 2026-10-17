@@ -76,6 +76,25 @@ HelloCV/
 | C++ 标准 | C++17（`CMAKE_CXX_STANDARD 17`，`CMAKE_CXX_STANDARD_REQUIRED ON`） |
 | 其他 | 无需第三方库；CMake ≥ 3.16 + C++17 编译器即可 |
 
+### 环境准备（Windows，只需做一次）
+
+Visual Studio 自带的 CMake 默认**不在 PATH** 中，直接在 VS Code / PowerShell 里敲 `cmake` 会报
+`无法将“cmake”项识别为 cmdlet、函数、脚本文件或可运行程序的名称`。任选一种方式解决：
+
+1. **把 VS 自带 CMake 加入用户 PATH（推荐，一次配置永久生效）**：本机路径为
+   `C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`
+   （随 VS 版本和安装位置不同而变化）。把它加入「系统属性 → 环境变量 → 用户变量 Path」后，
+   **完全退出并重新打开 VS Code**（只新开终端不够，VS Code 进程需要重启才能继承新的 PATH），新终端即可识别 `cmake`。
+2. **使用 VS 开发者终端**：打开「Developer PowerShell for VS 2026」或「x64 Native Tools Command Prompt for VS 2026」，
+   这些终端会自动把 CMake、MSVC、Ninja 加入 PATH，可直接执行构建命令。
+3. **只在当前终端临时生效**：
+
+   ```powershell
+   $env:PATH = "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;" + $env:PATH
+   ```
+
+验证：`cmake --version` 能输出 `cmake version 4.3.1-msvc1`（本机实测）即配置成功。
+
 ## 构建与运行
 
 ### 方式 A：Windows + Visual Studio 生成器（本机实测通过）
@@ -230,6 +249,12 @@ Ninja、MinGW Makefiles、Unix Makefiles 是单配置生成器，产物直接在
 **Q8：`build/` 目录需要提交吗？Visual Studio 的 `.vs/` 呢？**
 都不需要也不能提交。`build/` 是本地生成的编译目录，体积大且与机器环境相关；`.gitignore` 已忽略 `build/`、`build-*/`、`build_*/` 这类构建目录，以及 `.vs/` 缓存目录、`*.vcxproj`、`*.sln` 等 IDE 生成文件。
 需要重新构建时，删除 `build/` 或改用新的构建目录（如 `build-ninja/`）重新配置即可。
+
+**Q9：终端提示「无法将“cmake”项识别为 cmdlet、函数、脚本文件或可运行程序的名称」？**
+Visual Studio 自带的 CMake 默认没有加入 PATH。按上文「环境准备（Windows）」把
+`...\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin` 加入用户 PATH 并重启 VS Code，
+或改用 VS 开发者终端；也可在当前终端临时执行
+`$env:PATH = "...\CMake\bin;" + $env:PATH` 后再运行 `cmake`。本机已按方式 1 配置并验证通过。
 
 ## 提交前检查清单
 

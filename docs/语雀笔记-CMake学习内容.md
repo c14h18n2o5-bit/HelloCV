@@ -215,6 +215,7 @@ cmake --install build --prefix <prefix> --config Release   # 安装
 
 ## 九、常见错误排查
 
+- **`cmake` 不是内部或外部命令 / 无法将“cmake”项识别为…（Windows）**：CMake 未加入 PATH。Visual Studio 自带的 CMake 位于 `...\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`，把它加入用户 PATH 并重启终端 / VS Code，或改用 VS 开发者终端（vcvars 会配置好 CMake、MSVC、Ninja）。
 - **找不到编译器**（`could not find CMAKE_CXX_COMPILER`）：未进入 VS 开发者环境，或生成器与工具链不匹配。
 - **同一构建目录混用生成器**：`build/` 已用 VS 生成器配置，再加 `-G Ninja` 会报生成器不一致，应另建目录。
 - **`unrecognized command line option '-std=c++17'`**：GCC 版本过低（本机 Dev-C++ 自带 TDM-GCC 4.9.2 即如此），需 GCC ≥ 7 或改用 MSVC。

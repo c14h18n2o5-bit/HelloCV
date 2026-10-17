@@ -362,6 +362,11 @@ cmake --install build --prefix <安装路径> --config Release
 分析：如果缺少 `.gitignore` 规则，`build/`、`.vs/`、`*.exe`、`*.lib` 等本地生成物会污染仓库、增大体积。
 解决与验证：`.gitignore` 已补齐 `build/`、`build-*/`、`build_*/`、`CMakeFiles/`、`*.exe`、`*.lib`、`*.sln`、`*.vcxproj`、`.vs/` 等规则；实测 `git status` 与 `git add -A --dry-run` 确认 `build/` 被忽略，暂存区只会加入源码与文档。
 
+**问题 8：VS Code 终端提示「无法将“cmake”项识别为…」**
+现象：在 VS Code 的 PowerShell 终端执行 `cmake --version`，报 `无法将“cmake”项识别为 cmdlet、函数、脚本文件或可运行程序的名称`。
+分析：本机 CMake 随 Visual Studio 安装，位于 VS 安装目录下的 `...\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`，默认没有加入用户 PATH，普通终端找不到它；而「Developer PowerShell for VS 2026」这类开发者终端会通过 vcvars 脚本把 CMake 加进 PATH，所以在开发者终端里可以正常使用。
+解决：把上述 CMake 的 `bin` 目录加入用户 PATH，然后**完全退出并重新打开 VS Code**（VS Code 进程需要重启才能继承新的 PATH，只新开终端不够）；也可以改用 VS 开发者终端，或在当前终端临时执行 `$env:PATH = "...\CMake\bin;" + $env:PATH`。实测配置后 `cmake --version` 输出 `cmake version 4.3.1-msvc1`，README 中的构建命令可直接执行。
+
 ## 八、CMake 命令覆盖对照表
 
 | 要求命令 | 使用位置 | 作用 |
